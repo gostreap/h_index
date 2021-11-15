@@ -30,7 +30,7 @@ def get_abstracts(n_lines=0):
     abstracts = {}
     all_file = False
     if n_lines == 0:
-        all_file == True
+        all_file = True
     for i, line in enumerate(abstracts_file):
         id, data = line.split("----")
         abstracts[int(id)] = json.loads(data)
