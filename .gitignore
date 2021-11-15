@@ -1,3 +1,6 @@
+# Project related ignored files
+data/abstracts.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
