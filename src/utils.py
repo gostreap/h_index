@@ -9,4 +9,4 @@ def get_abstract_text(abstract):
     for word, pos in abstract["InvertedIndex"].items():
         for i in pos:
             text_tab[i] = word
-    return " ".join(text_tab)
+    return " ".join((filter((None).__ne__, text_tab)))
