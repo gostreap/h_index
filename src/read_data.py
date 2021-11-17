@@ -26,7 +26,7 @@ def get_graph():
 
 
 def get_abstracts(n_lines=0):
-    abstracts_file = open("../data/abstracts.txt", "r")
+    abstracts_file = open("./data/abstracts.txt", "r")
     abstracts = {}
     all_file = False
     if n_lines == 0:

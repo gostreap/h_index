@@ -6,15 +6,15 @@ from sklearn.linear_model import Lasso
 
 
 # read training data
-df_train = pd.read_csv('train.csv', dtype={'author': np.int64, 'hindex': np.float32})
+df_train = pd.read_csv('./data/train.csv', dtype={'author': np.int64, 'hindex': np.float32})
 n_train = df_train.shape[0]
 
 # read test data
-df_test = pd.read_csv('test.csv', dtype={'author': np.int64})
+df_test = pd.read_csv('./data/test.csv', dtype={'author': np.int64})
 n_test = df_test.shape[0]
 
-# load the graph    
-G = nx.read_edgelist('coauthorship.edgelist', delimiter=' ', nodetype=int)
+# load the graph
+G = nx.read_edgelist('./data/coauthorship.edgelist', delimiter=' ', nodetype=int)
 n_nodes = G.number_of_nodes()
 n_edges = G.number_of_edges() 
 print('Number of nodes:', n_nodes)
@@ -51,7 +51,7 @@ y_pred = reg.predict(X_test)
 df_test['hindex'] = pd.Series(np.round_(y_pred, decimals=3))
 
 
-df_test.loc[:,["author","hindex"]].to_csv('submission.csv', index=False)
+df_test.loc[:,["author","hindex"]].to_csv('./data/submission.csv', index=False)
 
 
 
