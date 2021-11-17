@@ -1,12 +1,27 @@
 import csv
 import json
 import pandas as pd
+import numpy as np
+from sklearn.cluster import KMeans
 
 from gensim.utils import simple_preprocess
 from read_data import get_graph, get_train_data_json
 
 from utils import get_abstract_text, get_all_coauthors_mean_hindex, get_all_number_of_coauthors
 
+def store_whole_data():
+    # Store all data
+    flag = True
+    start = 0
+    end = 0
+    end = 10000 if end <= train.shape[0]-1 else train.shape[0]-1
+    i = 1
+    while(end<= train.shape[0]-1):
+        temp_data = preprocessing2_for_fastText(0,train,start,end)
+        temp_data.to_csv("../tmp/data_part"+str(i)+".csv",index = None)
+        start = end
+        end = end+10000 if end+10000 <= train.shape[0]-1 else train.shape[0]-1
+        i = i+1
 
 def df_to_txt(data, file_name):
     data[["hindex_lab", "text"]].to_csv(
@@ -48,8 +63,9 @@ def get_authors_id_by_papers_id_dict(ids):
 
 
 def small_class(data, k):
-    maxi = data["hindex"].max()
-    data["modindx"] = data["hindex"].apply(lambda x: x if x < k else k)
+    index = np.sort(np.array(data['hindex'].to_list())).reshape(-1,1)
+    clusters = KMeans(n_clusters=k,random_state=1).fit(index)
+    data["modindx"] = data["hindex"].apply(lambda x: clusters.predict([[x]])[0])
     data["hindex_lab"] = data["modindx"].apply(lambda x: "__label__" + str(x))
     return data
 
