@@ -27,14 +27,10 @@ def csv_to_json(csvFilePath, jsonFilePath):
         jsonString = json.dumps(jsonArray, indent=4)
         jsonf.write(jsonString)
 
-csv_to_json("./data/train.csv", "./data/train.json")
-csv_to_json("./data/test.csv", "./data/test.json")
-
 def get_coauthorship_graph():
     """Constructs NetworX graph from input document with list of edges ./data/coauthorship.edgelist"""
     return nx.read_edgelist("./data/coauthorship.edgelist")
 
 def get_coauthors_hindex(graph, n):
     """returns a list of all the h-indeces of the co-others of author wih id n"""
-
-G = get_coauthorship_graph()
+    G = get_coauthorship_graph()
