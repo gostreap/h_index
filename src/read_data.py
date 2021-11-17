@@ -30,13 +30,25 @@ def get_abstracts(n_lines=0):
     abstracts = {}
     all_file = False
     if n_lines == 0:
-        all_file == True
+        all_file = True
     for i, line in enumerate(abstracts_file):
-        id, data = line.split("----")
+        id, data = line.split("----", 1)
         abstracts[int(id)] = json.loads(data)
         if not all_file and i == n_lines:
             return abstracts
     return abstracts
+
+
+def yield_abstracts(n_lines=0):
+    abstracts_file = open("../data/abstracts.txt", "r")
+    all_file = False
+    if n_lines == 0:
+        all_file = True
+    for i, line in enumerate(abstracts_file):
+        id, data = line.split("----", 1)
+        yield int(id), json.loads(data)
+        if not all_file and i == n_lines:
+            return
 
 
 def get_author_papers():
