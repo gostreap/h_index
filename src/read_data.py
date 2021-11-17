@@ -12,6 +12,11 @@ def get_train_data():
     return df_train, n_train
 
 
+def get_train_data_json():
+    with open("../data/train.json") as json_train_file:
+        return json.load(json_train_file)
+
+
 def get_test_data():
     df_test = pd.read_csv("../data/test.csv", dtype={"author": np.int64})
     n_test = df_test.shape[0]
@@ -26,7 +31,7 @@ def get_graph():
 
 
 def get_abstracts(n_lines=0):
-    abstracts_file = open("./data/abstracts.txt", "r")
+    abstracts_file = open("../data/abstracts.txt", "r")
     abstracts = {}
     all_file = False
     if n_lines == 0:

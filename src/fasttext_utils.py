@@ -3,6 +3,10 @@ import json
 import pandas as pd
 
 from gensim.utils import simple_preprocess
+from read_data import get_graph, get_train_data_json
+
+from utils import get_abstract_text, get_all_coauthors_mean_hindex, get_all_number_of_coauthors
+
 
 def df_to_txt(data, file_name):
     data[["hindex_lab", "text"]].to_csv(
@@ -16,30 +20,22 @@ def df_to_txt(data, file_name):
     )
 
 
-def getText(dic):
-    temp = [""] * dic["IndexLength"]
-    for word, pos in dic["InvertedIndex"].items():
-        for i in pos:
-            temp[i] = word
-    return " ".join((filter((None).__ne__, temp)))
-
-
-def get_abstracts_by_dic(dic):
-    ids = dic.keys()
+def get_all_text_by_author_id(paper_id_to_author_id):
+    ids = paper_id_to_author_id.keys()
     abstracts_file = open("../data/abstracts.txt", "r", encoding="utf-8")
     abstracts = {}
     for i, line in enumerate(abstracts_file):
         id, data = line.split("----", 1)
         if int(id) in ids:
-            abstracts[dic[int(id)]] = (
+            abstracts[paper_id_to_author_id[int(id)]] = (
                 [json.loads(data)]
-                if abstracts.get(dic[int(id)]) is None
-                else [json.loads(data)] + abstracts.get(dic[int(id)])
+                if abstracts.get(paper_id_to_author_id[int(id)]) is None
+                else [json.loads(data)] + abstracts.get(paper_id_to_author_id[int(id)])
             )
     return abstracts
 
 
-def get_authors_papers_id_by_ids(ids):
+def get_authors_id_by_papers_id_dict(ids):
     author_papers_file = open("../data/author_papers.txt", "r", encoding="utf-8")
     author_papers = {}
     for line in author_papers_file:
@@ -51,30 +47,6 @@ def get_authors_papers_id_by_ids(ids):
     return author_papers
 
 
-def preprocessing_for_fastText(n_sample, data):
-    data1 = data.sample(n=n_sample, random_state=1)
-    ids = data1["author"].to_list()
-    paper_id_dic = get_authors_papers_id_by_ids(ids)
-    abstract = get_abstracts_by_dic(paper_id_dic)
-    abstract_text = {}
-    for id in abstract.keys():
-        abstract_text[id] = " ".join(
-            simple_preprocess(
-                " ".join([" ".join(r["InvertedIndex"]) for r in abstract[id]])
-            )
-        )
-    data1["hindex_lab"] = data1["hindex"].apply(lambda x: "__label__" + str(x))
-    df_abstract_text = pd.DataFrame.from_dict(
-        abstract_text, orient="index", columns=["text"]
-    )
-    df_abstract_text["author"] = df_abstract_text.index
-    df_abstract_text = df_abstract_text.reset_index(drop=True)
-    df_data = data1.merge(
-        df_abstract_text, left_on="author", right_on="author", how="inner"
-    )
-    return df_data
-
-
 def small_class(data, k):
     maxi = data["hindex"].max()
     data["modindx"] = data["hindex"].apply(lambda x: x if x < k else k)
@@ -82,26 +54,45 @@ def small_class(data, k):
     return data
 
 
-def preprocessing2_for_fastText(n_sample, data):
-    data1 = data.sample(n=n_sample, random_state=1)
-    ids = data1["author"].to_list()
-    paper_id_dic = get_authors_papers_id_by_ids(ids)
-    abstract = get_abstracts_by_dic(paper_id_dic)
-    abstract_text = {}
+def preprocessing_for_fastText(n_sample, data):
+    # get a random subset of data
+    sample_data = data.sample(n=n_sample, random_state=1)
+
+    author_ids = sample_data["author"].to_list()
+    paper_id_to_author_id = get_authors_id_by_papers_id_dict(author_ids)
+    
+    abstract = get_all_text_by_author_id(paper_id_to_author_id)
+    abstract_text_by_author_id = {}
     for id in abstract.keys():
-        abstract_text[id] = [
-            " ".join(simple_preprocess(" ".join([getText(r) for r in abstract[id]]))),
+        abstract_text_by_author_id[id] = [
+            " ".join(
+                simple_preprocess(
+                    " ".join([get_abstract_text(r) for r in abstract[id]])
+                )
+            ),
             len(abstract[id]),
         ]
-    # data1['hindex_lab'] = data1['modindx'].apply(lambda x:'__label__'+str(x))
+
+    
     df_abstract_text = pd.DataFrame.from_dict(
-        abstract_text, orient="index", columns=["text", "nb_paper"]
+        abstract_text_by_author_id, orient="index", columns=["text", "nb_paper"]
     )
     df_abstract_text["author"] = df_abstract_text.index
     df_abstract_text = df_abstract_text.reset_index(drop=True)
-    df_data = data1.merge(
+
+    df_data = sample_data.merge(
         df_abstract_text, left_on="author", right_on="author", how="inner"
     )
+
+    G, _, _ = get_graph()
+    train_data_json = get_train_data_json()
+    coauthors_hindex = get_all_coauthors_mean_hindex(author_ids, G, train_data_json)
+    n_coauthors = get_all_number_of_coauthors(author_ids, G, train_data_json)
+
+    # TODO : change 9.841160 by mean value of hindex of author
+    df_data["mean_coauthors_hindex"] = df_data["author"].apply(lambda author_id: coauthors_hindex[author_id] if coauthors_hindex[author_id] is not None else 9.841160)
+    df_data["n_coauthors"] = df_data["author"].apply(lambda author_id: n_coauthors[author_id])
+
     return df_data
 
 
