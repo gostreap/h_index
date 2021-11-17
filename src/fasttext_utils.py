@@ -9,15 +9,15 @@ from read_data import get_graph, get_train_data_json
 
 from utils import get_abstract_text, get_all_coauthors_mean_hindex, get_all_number_of_coauthors
 
-def store_whole_data():
+def store_whole_dataset(train):
     # Store all data
     flag = True
     start = 0
     end = 0
     end = 10000 if end <= train.shape[0]-1 else train.shape[0]-1
     i = 1
-    while(end<= train.shape[0]-1):
-        temp_data = preprocessing2_for_fastText(0,train,start,end)
+    while(end<= train.shape[0]-1 and start< train.shape[0]-1):
+        temp_data = preprocessing_for_fastText(0,train,start,end)
         temp_data.to_csv("../tmp/data_part"+str(i)+".csv",index = None)
         start = end
         end = end+10000 if end+10000 <= train.shape[0]-1 else train.shape[0]-1
@@ -70,10 +70,12 @@ def small_class(data, k):
     return data
 
 
-def preprocessing_for_fastText(n_sample, data):
+def preprocessing_for_fastText(n_sample, data,start,end):
     # get a random subset of data
-    sample_data = data.sample(n=n_sample, random_state=1)
-
+    if (end>start):
+        sample_data = data.iloc[start:end,:]
+    else:
+        sample_data = data.sample(n=n_sample, random_state=1)
     author_ids = sample_data["author"].to_list()
     paper_id_to_author_id = get_authors_id_by_papers_id_dict(author_ids)
     
