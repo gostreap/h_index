@@ -1,11 +1,11 @@
 from read_data import get_train_data, get_test_data
 from fasttext_utils import small_class, df_to_txt, format_data
-from utils import get_core_number
+from utils import get_core_number, get_min_coauthor_hindex, get_max_coauthor_hindex
 from sklearn.ensemble import RandomForestRegressor
 import pandas as pd
 import fasttext
 
-def submit():
+def submit(model):
     train, _ = get_train_data()
     test, _ = get_test_data()
 
@@ -28,18 +28,22 @@ def submit():
     train_path = "../tmp/train.txt"
     df_to_txt(train,train_path)
 
-    model0 = fasttext.train_supervised(train_path,lr = 0.626905, dim = 12, epoch = 11, wordNgrams =3)
+    model_fasttext = fasttext.train_supervised(train_path,lr = 0.626905, dim = 12, epoch = 11, wordNgrams =3)
 
     train_core_number = get_core_number(train["author"])
     test_core_number = get_core_number(test["author"])
 
-    X_train,y_train = format_data(train, model0, train_core_number)
-    X_test, y_test = format_data(test, model0, test_core_number)
+    train_min_coauthor_hindex = get_min_coauthor_hindex(train["author"])
+    test_min_coauthor_hindex = get_min_coauthor_hindex(test["author"])
 
-    forest_model = RandomForestRegressor(random_state=1)
-    forest_model.fit(X_train,y_train)
+    train_max_coauthor_hindex = get_max_coauthor_hindex(train["author"])
+    test_max_coauthor_hindex = get_max_coauthor_hindex(test["author"])
 
-    y_pred = forest_model.predict(X_test)
+    X_train,y_train = format_data(train, model_fasttext, train_core_number, train_min_coauthor_hindex, train_max_coauthor_hindex)
+    X_test, y_test = format_data(test, model_fasttext, test_core_number, test_min_coauthor_hindex, test_max_coauthor_hindex)
+
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
 
     test["hindex"] = y_pred
     submission = test[["author", "hindex"]]

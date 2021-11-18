@@ -134,14 +134,16 @@ def general_comp(model, test):
     return test_err
 
 
-def format_data(data, model, core_number):
+def format_data(data, model, core_number, min_coauthors_hindex, max_coauthors_hindex):
     vectors = data["text"].apply(lambda x: model.get_sentence_vector(x) if not pd.isnull(x) else model.get_sentence_vector("")).to_list()    
     nb_data = np.array(data["nb_paper"].apply(lambda x: x if not pd.isnull(x) else 0).to_list()).reshape(-1, 1)
     coauthors_hindex_data = np.array(data["mean_coauthors_hindex"].to_list()).reshape(-1, 1)
     n_coauthors_data = np.array(data["n_coauthors"].to_list()).reshape(-1, 1)
     core_number = np.array(core_number["core_number"].to_list()).reshape(-1, 1)
+    min_coauthors_hindex = np.array(min_coauthors_hindex["min_coauthor_hindex"].to_list()).reshape(-1, 1)
+    max_coauthors_hindex = np.array(max_coauthors_hindex["max_coauthor_hindex"].to_list()).reshape(-1, 1)
     
-    X = np.concatenate((vectors, nb_data, coauthors_hindex_data, n_coauthors_data, core_number), axis=1)
+    X = np.concatenate((vectors, nb_data, coauthors_hindex_data, n_coauthors_data, core_number, min_coauthors_hindex, max_coauthors_hindex), axis=1)
     y = np.array(data["hindex"].to_list())
     
     return X, y

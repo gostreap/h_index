@@ -2,7 +2,7 @@ import networkx as nx
 import csv
 import json
 import pandas as pd
-from read_data import get_graph
+from read_data import get_graph, get_train_data_json
 
 
 def get_abstract_text(abstract):
@@ -39,8 +39,10 @@ def get_coauthors_hindex(author_id, G, train_data_json):
         if str(neighbor_id) in train_data_json
     ]
 
+
 def get_number_of_coauthors(author_id, G, train_data_json):
     return len(get_coauthors_hindex(author_id, G, train_data_json))
+
 
 def get_coauthors_min_mean_max_hindex(author_id, G, train_data_json):
     coauthors_hindex = get_coauthors_hindex(author_id, G, train_data_json)
@@ -54,12 +56,28 @@ def get_coauthors_min_mean_max_hindex(author_id, G, train_data_json):
         return None, None, None
 
 
+def get_coauthors_min_hindex(author_id, G, train_data_json):
+    coauthors_hindex = get_coauthors_hindex(author_id, G, train_data_json)
+    if len(coauthors_hindex) > 0:
+        return min(coauthors_hindex)
+    else:
+        return 1 # WARNING : Check 1
+
+
 def get_coauthors_mean_hindex(author_id, G, train_data_json):
     coauthors_hindex = get_coauthors_hindex(author_id, G, train_data_json)
     if len(coauthors_hindex) > 0:
         return sum(coauthors_hindex) / len(coauthors_hindex)
     else:
         return None
+
+
+def get_coauthors_max_hindex(author_id, G, train_data_json):
+    coauthors_hindex = get_coauthors_hindex(author_id, G, train_data_json)
+    if len(coauthors_hindex) > 0:
+        return max(coauthors_hindex)
+    else:
+        return 100 # WARNING : Check 100
 
 
 def get_all_coauthors_mean_hindex(authors_ids, G, train_data_json):
@@ -75,9 +93,32 @@ def get_all_number_of_coauthors(authors_ids, G, train_data_json):
         n_coauthors[author_id] = get_number_of_coauthors(author_id, G, train_data_json)
     return n_coauthors
 
+
 def get_core_number(author_ids):
     G, _, _ = get_graph()
     core_number = nx.core_number(G)
     author_core_numbers = [core_number[author_id] for author_id in author_ids]
     df = pd.DataFrame({"author": author_ids, "core_number": author_core_numbers})
+    return df
+
+
+def get_min_coauthor_hindex(author_ids):
+    G, _, _ = get_graph()
+    train_data_json = get_train_data_json()
+    min_hindex = [
+        get_coauthors_min_hindex(author_id, G, train_data_json)
+        for author_id in author_ids
+    ]
+    df = pd.DataFrame({"author": author_ids, "min_coauthor_hindex": min_hindex})
+    return df
+
+
+def get_max_coauthor_hindex(author_ids):
+    G, _, _ = get_graph()
+    train_data_json = get_train_data_json()
+    max_hindex = [
+        get_coauthors_max_hindex(author_id, G, train_data_json)
+        for author_id in author_ids
+    ]
+    df = pd.DataFrame({"author": author_ids, "max_coauthor_hindex": max_hindex})
     return df
