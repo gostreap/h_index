@@ -1,7 +1,6 @@
 from read_data import get_train_data, get_test_data
 from fasttext_utils import small_class, df_to_txt, format_data
-from utils import get_core_number, get_min_coauthor_hindex, get_max_coauthor_hindex
-from sklearn.ensemble import RandomForestRegressor
+from utils import get_core_number, get_min_coauthor_hindex, get_max_coauthor_hindex, get_page_rank
 import pandas as pd
 import fasttext
 
@@ -39,8 +38,11 @@ def submit(model):
     train_max_coauthor_hindex = get_max_coauthor_hindex(train["author"])
     test_max_coauthor_hindex = get_max_coauthor_hindex(test["author"])
 
-    X_train,y_train = format_data(train, model_fasttext, train_core_number, train_min_coauthor_hindex, train_max_coauthor_hindex)
-    X_test, y_test = format_data(test, model_fasttext, test_core_number, test_min_coauthor_hindex, test_max_coauthor_hindex)
+    train_pagerank = get_page_rank(train["author"])
+    test_pagerank = get_page_rank(test["author"])
+
+    X_train,y_train = format_data(train, model_fasttext, train_core_number, train_min_coauthor_hindex, train_max_coauthor_hindex, train_pagerank)
+    X_test, y_test = format_data(test, model_fasttext, test_core_number, test_min_coauthor_hindex, test_max_coauthor_hindex, test_pagerank)
 
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)

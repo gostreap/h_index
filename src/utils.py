@@ -102,6 +102,14 @@ def get_core_number(author_ids):
     return df
 
 
+def get_page_rank(author_ids):
+    G, _, _ = get_graph()
+    core_number = nx.pagerank(G)
+    author_pagerank = [core_number[author_id] for author_id in author_ids]
+    df = pd.DataFrame({"author": author_ids, "pagerank": author_pagerank})
+    return df
+
+
 def get_min_coauthor_hindex(author_ids):
     G, _, _ = get_graph()
     train_data_json = get_train_data_json()
