@@ -9,18 +9,23 @@ from read_data import get_graph, get_train_data_json
 
 from utils import get_abstract_text, get_all_coauthors_mean_hindex, get_all_number_of_coauthors
 
-def store_whole_dataset(train):
+def store_whole_dataset(train, path="../tmp/data_part"):
     # Store all data
     flag = True
     start = 0
     end = 0
-    end = 10000 if end <= train.shape[0]-1 else train.shape[0]-1
+    end = 10000 if end <= train.shape[0] else train.shape[0]
     i = 1
-    while(end<= train.shape[0]-1 and start< train.shape[0]-1):
-        temp_data = preprocessing_for_fastText(0,train,start,end)
-        temp_data.to_csv("../tmp/data_part"+str(i)+".csv",index = None)
+    while(end<= train.shape[0] and start< train.shape[0]):
+        if not end < train.shape[0]:
+            print(end+1)
+            temp_data = preprocessing_for_fastText(0,train,start,end+1)
+        else:
+            print(end)
+            temp_data = preprocessing_for_fastText(0,train,start,end)
+        temp_data.to_csv(path+str(i)+".csv",index = None)
         start = end
-        end = end+10000 if end+10000 <= train.shape[0]-1 else train.shape[0]-1
+        end = end+10000 if end+10000 <= train.shape[0] else train.shape[0]
         i = i+1
 
 def df_to_txt(data, file_name):
@@ -70,7 +75,7 @@ def small_class(data, k):
     return data
 
 
-def preprocessing_for_fastText(n_sample, data,start,end):
+def preprocessing_for_fastText(n_sample, data,start=0,end=0):
     # get a random subset of data
     if (end>start):
         sample_data = data.iloc[start:end,:]
@@ -81,16 +86,18 @@ def preprocessing_for_fastText(n_sample, data,start,end):
     
     abstract = get_all_text_by_author_id(paper_id_to_author_id)
     abstract_text_by_author_id = {}
-    for id in abstract.keys():
-        abstract_text_by_author_id[id] = [
+    for author_id in abstract.keys():
+        abstract_text_by_author_id[author_id] = [
             " ".join(
                 simple_preprocess(
-                    " ".join([get_abstract_text(r) for r in abstract[id]])
+                    " ".join([get_abstract_text(r) for r in abstract[author_id]])
                 )
             ),
-            len(abstract[id]),
+            len(abstract[author_id]),
         ]
 
+    for author_id in set(author_ids).difference(set(abstract.keys())):
+        abstract_text_by_author_id[author_id]=["", 0]
     
     df_abstract_text = pd.DataFrame.from_dict(
         abstract_text_by_author_id, orient="index", columns=["text", "nb_paper"]
@@ -125,3 +132,27 @@ def general_comp(model, test):
     test_comp = pd.concat([df_test_pred, test], axis=1)
     test_err = test_comp[test_comp["hindex_lab"] != test_comp["test_pred_lab"]]
     return test_err
+
+
+def reg_data(train, test, model):
+    X_train = np.zeros((train.shape[0], model.dim))
+    set_rep = train["text"].apply(lambda x: model.get_sentence_vector(x) if not pd.isnull(x) else model.get_sentence_vector(""))
+    X_train = np.array(set_rep.to_list())
+    nb_train = np.array(train["nb_paper"].apply(lambda x: x if not pd.isnull(x) else 0).to_list()).reshape(-1, 1)
+    coauthors_hindex_train = np.array(train["mean_coauthors_hindex"].to_list()).reshape(-1, 1)
+    n_coauthors_train = np.array(train["n_coauthors"].to_list()).reshape(-1, 1)
+    X_train = np.concatenate((X_train, nb_train, coauthors_hindex_train, n_coauthors_train), axis=1)
+    # X_train = np.concatenate((X_train, nb_train), axis=1)
+
+    X_test = np.zeros((test.shape[0], model.dim))
+    set_rep = test["text"].apply(lambda x: model.get_sentence_vector(x) if not pd.isnull(x) else model.get_sentence_vector(""))
+    X_test = np.array(set_rep.to_list())
+    nb_test = np.array(test["nb_paper"].apply(lambda x: x if not pd.isnull(x) else 0).to_list()).reshape(-1, 1)
+    coauthors_hindex_test = np.array(test["mean_coauthors_hindex"].to_list()).reshape(-1, 1)
+    n_coauthors_test = np.array(test["n_coauthors"].to_list()).reshape(-1, 1)
+    X_test = np.concatenate((X_test, nb_test, coauthors_hindex_test, n_coauthors_test), axis=1)
+    # X_test = np.concatenate((X_test, nb_test), axis=1)
+
+    y_train = np.array(train["hindex"].to_list())
+    y_test = np.array(test["hindex"].to_list())
+    return X_train, X_test, y_train, y_test
