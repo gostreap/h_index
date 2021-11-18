@@ -1,6 +1,8 @@
 import networkx as nx
 import csv
 import json
+import pandas as pd
+from read_data import get_graph
 
 
 def get_abstract_text(abstract):
@@ -72,3 +74,10 @@ def get_all_number_of_coauthors(authors_ids, G, train_data_json):
     for author_id in authors_ids:
         n_coauthors[author_id] = get_number_of_coauthors(author_id, G, train_data_json)
     return n_coauthors
+
+def get_core_number(author_ids):
+    G, _, _ = get_graph()
+    core_number = nx.core_number(G)
+    author_core_numbers = [core_number[author_id] for author_id in author_ids]
+    df = pd.DataFrame({"author": author_ids, "core_number": author_core_numbers})
+    return df

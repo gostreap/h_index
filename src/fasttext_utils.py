@@ -134,25 +134,14 @@ def general_comp(model, test):
     return test_err
 
 
-def reg_data(train, test, model):
-    X_train = np.zeros((train.shape[0], model.dim))
-    set_rep = train["text"].apply(lambda x: model.get_sentence_vector(x) if not pd.isnull(x) else model.get_sentence_vector(""))
-    X_train = np.array(set_rep.to_list())
-    nb_train = np.array(train["nb_paper"].apply(lambda x: x if not pd.isnull(x) else 0).to_list()).reshape(-1, 1)
-    coauthors_hindex_train = np.array(train["mean_coauthors_hindex"].to_list()).reshape(-1, 1)
-    n_coauthors_train = np.array(train["n_coauthors"].to_list()).reshape(-1, 1)
-    X_train = np.concatenate((X_train, nb_train, coauthors_hindex_train, n_coauthors_train), axis=1)
-    # X_train = np.concatenate((X_train, nb_train), axis=1)
-
-    X_test = np.zeros((test.shape[0], model.dim))
-    set_rep = test["text"].apply(lambda x: model.get_sentence_vector(x) if not pd.isnull(x) else model.get_sentence_vector(""))
-    X_test = np.array(set_rep.to_list())
-    nb_test = np.array(test["nb_paper"].apply(lambda x: x if not pd.isnull(x) else 0).to_list()).reshape(-1, 1)
-    coauthors_hindex_test = np.array(test["mean_coauthors_hindex"].to_list()).reshape(-1, 1)
-    n_coauthors_test = np.array(test["n_coauthors"].to_list()).reshape(-1, 1)
-    X_test = np.concatenate((X_test, nb_test, coauthors_hindex_test, n_coauthors_test), axis=1)
-    # X_test = np.concatenate((X_test, nb_test), axis=1)
-
-    y_train = np.array(train["hindex"].to_list())
-    y_test = np.array(test["hindex"].to_list())
-    return X_train, X_test, y_train, y_test
+def format_data(data, model, core_number):
+    vectors = data["text"].apply(lambda x: model.get_sentence_vector(x) if not pd.isnull(x) else model.get_sentence_vector("")).to_list()    
+    nb_data = np.array(data["nb_paper"].apply(lambda x: x if not pd.isnull(x) else 0).to_list()).reshape(-1, 1)
+    coauthors_hindex_data = np.array(data["mean_coauthors_hindex"].to_list()).reshape(-1, 1)
+    n_coauthors_data = np.array(data["n_coauthors"].to_list()).reshape(-1, 1)
+    core_number = np.array(core_number["core_number"].to_list()).reshape(-1, 1)
+    
+    X = np.concatenate((vectors, nb_data, coauthors_hindex_data, n_coauthors_data, core_number), axis=1)
+    y = np.array(data["hindex"].to_list())
+    
+    return X, y

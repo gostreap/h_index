@@ -1,5 +1,6 @@
 from read_data import get_train_data, get_test_data
-from fasttext_utils import small_class, df_to_txt, reg_data
+from fasttext_utils import small_class, df_to_txt, format_data
+from utils import get_core_number
 from sklearn.ensemble import RandomForestRegressor
 import pandas as pd
 import fasttext
@@ -29,7 +30,11 @@ def submit():
 
     model0 = fasttext.train_supervised(train_path,lr = 0.626905, dim = 12, epoch = 11, wordNgrams =3)
 
-    X_train, X_test, y_train, y_test = reg_data(train, test, model0)
+    train_core_number = get_core_number(train["author"])
+    test_core_number = get_core_number(test["author"])
+
+    X_train,y_train = format_data(train, model0, train_core_number)
+    X_test, y_test = format_data(test, model0, test_core_number)
 
     forest_model = RandomForestRegressor(random_state=1)
     forest_model.fit(X_train,y_train)
