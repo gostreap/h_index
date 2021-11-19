@@ -44,6 +44,28 @@ def get_number_of_coauthors(author_id, G):
     return G.degree(author_id)
 
 
+def get_all_number_of_coauthors(authors_ids, G):
+    n_coauthors = {}
+    for author_id in authors_ids:
+        n_coauthors[author_id] = get_number_of_coauthors(author_id, G)
+    return n_coauthors
+
+
+def get_number_of_second_degree_neighbors(author_id, G: nx.Graph):
+    second_degree_neighbors = set()
+    for neighbor in G.neighbors(author_id):
+        second_degree_neighbors = second_degree_neighbors.union(set(G.neighbors(neighbor)))
+    return len(second_degree_neighbors)
+
+
+def get_all_number_of_second_degree_neighbors(authors_ids):
+    G, _, _ = get_graph()
+    n_second = {}
+    for author_id in authors_ids:
+        n_second[author_id] = get_number_of_second_degree_neighbors(author_id, G)
+    return pd.DataFrame(list(n_second.items()), columns=["author", "n_neighbors_of_neighbors"])
+
+
 def get_number_of_coauthors_with_hindex(author_id, G, train_data_json):
     return len(get_coauthors_hindex(author_id, G, train_data_json))
 
@@ -89,13 +111,6 @@ def get_all_coauthors_mean_hindex(authors_ids, G, train_data_json):
     for author_id in authors_ids:
         hindex[author_id] = get_coauthors_mean_hindex(author_id, G, train_data_json)
     return hindex
-
-
-def get_all_number_of_coauthors(authors_ids, G):
-    n_coauthors = {}
-    for author_id in authors_ids:
-        n_coauthors[author_id] = get_number_of_coauthors(author_id, G)
-    return n_coauthors
 
 
 def get_all_number_of_coauthors_with_hindex(authors_ids):
