@@ -1,6 +1,7 @@
 import networkx as nx
 import csv
 import json
+from networkx.algorithms.cluster import clustering
 import pandas as pd
 from read_data import get_graph, get_train_data_json
 
@@ -143,6 +144,14 @@ def get_authority(author_ids):
     authority, _ = nx.hits(G)
     author_authority = [authority[author_id] for author_id in author_ids]
     df = pd.DataFrame({"author": author_ids, "authority": author_authority})
+    return df
+
+
+def get_clustering_coef(author_ids):
+    G, _, _ = get_graph()
+    clustering_coefs = nx.clustering(G, nodes=author_ids)
+    author_clusering_coef = [clustering_coefs[author_id] for author_id in author_ids]
+    df = pd.DataFrame({"author": author_ids, "clustering_coef": author_clusering_coef})
     return df
 
 

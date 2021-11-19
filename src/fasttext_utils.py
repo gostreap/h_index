@@ -17,6 +17,7 @@ from utils import (
     get_all_number_of_coauthors,
     get_all_number_of_coauthors_with_hindex,
     get_authority,
+    get_clustering_coef,
     get_core_number,
     get_max_coauthor_hindex,
     get_min_coauthor_hindex,
@@ -27,6 +28,14 @@ from utils import (
 
 PROCESSED_TRAIN_PATH = "../tmp/processed_train.csv"
 PROCESSED_TEST_PATH = "../tmp/processed_test.csv"
+
+
+def normalize(X_train, X_test):
+    m = np.mean(X_train, axis=0)
+    std = np.std(X_train, axis=0)
+    X_train = (X_train - m) / std
+    X_test = (X_test - m) / std
+    return X_train, X_test
 
 
 def get_submission_data():
@@ -98,7 +107,8 @@ def clean_columns(data):
         "n_coauthors_with_hindex",
         "pagerank",
         "authority",
-        "n_neighbors_of_neighbors"
+        "n_neighbors_of_neighbors",
+        "clustering_coef"
     ]
     valid_columns += [column for column in data if column.startswith("vector_coord_")]
 
@@ -185,6 +195,14 @@ def store_full_dataset_with_features(from_scratch=False, vectorize=True):
         test = add_features(
             test, get_all_number_of_second_degree_neighbors(test["author"])
         )
+
+    if not "clustering_coef" in train.columns:
+        print("Add clustering coef to train")
+        train = add_features(train, get_clustering_coef(train["author"]))
+    if not "clustering_coef" in test.columns:
+        print("Add clustering coef to test")
+        test = add_features(test, get_clustering_coef(test["author"]))
+
 
     if not "hindex_lab" in train.columns:
         print("Add small class to train")
