@@ -44,6 +44,10 @@ def get_number_of_coauthors(author_id, G):
     return G.degree(author_id)
 
 
+def get_number_of_coauthors_with_hindex(author_id, G, train_data_json):
+    return len(get_coauthors_hindex(author_id, G, train_data_json))
+
+
 def get_coauthors_min_mean_max_hindex(author_id, G, train_data_json):
     coauthors_hindex = get_coauthors_hindex(author_id, G, train_data_json)
     if len(coauthors_hindex) > 0:
@@ -94,6 +98,15 @@ def get_all_number_of_coauthors(authors_ids, G):
     return n_coauthors
 
 
+def get_all_number_of_coauthors_with_hindex(authors_ids):
+    G, _, _ = get_graph()
+    train_data_json = get_train_data_json()
+    n_coauthors = {}
+    for author_id in authors_ids:
+        n_coauthors[author_id] = get_number_of_coauthors_with_hindex(author_id, G, train_data_json)
+    return pd.DataFrame(list(n_coauthors.items()), columns=["author", "n_coauthors_with_hindex"])
+
+
 def get_core_number(author_ids):
     G, _, _ = get_graph()
     core_number = nx.core_number(G)
@@ -107,6 +120,14 @@ def get_page_rank(author_ids):
     core_number = nx.pagerank(G)
     author_pagerank = [core_number[author_id] for author_id in author_ids]
     df = pd.DataFrame({"author": author_ids, "pagerank": author_pagerank})
+    return df
+
+
+def get_authority(author_ids):
+    G, _, _ = get_graph()
+    authority, _ = nx.hits(G)
+    author_authority = [authority[author_id] for author_id in author_ids]
+    df = pd.DataFrame({"author": author_ids, "authority": author_authority})
     return df
 
 

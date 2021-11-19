@@ -1,6 +1,7 @@
 # Project related ignored files
 data/abstracts.txt
 tmp/
+catboost_info/
 
 # vscode
 .vscode

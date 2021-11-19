@@ -15,6 +15,8 @@ from utils import (
     get_abstract_text,
     get_all_coauthors_mean_hindex,
     get_all_number_of_coauthors,
+    get_all_number_of_coauthors_with_hindex,
+    get_authority,
     get_core_number,
     get_max_coauthor_hindex,
     get_min_coauthor_hindex,
@@ -24,6 +26,16 @@ from utils import (
 
 PROCESSED_TRAIN_PATH = "../tmp/processed_train.csv"
 PROCESSED_TEST_PATH = "../tmp/processed_test.csv"
+
+def get_submission_data():
+    train = pd.read_csv(PROCESSED_TRAIN_PATH)
+    test = pd.read_csv(PROCESSED_TEST_PATH)
+    X_train = train.drop(["author", "hindex", "text", "modindx", "hindex_lab"], axis=1).to_numpy()
+    y_train = train["hindex"].to_numpy()
+    X_test = test.drop(["author", "hindex", "text"], axis=1).to_numpy()
+    y_test = test["hindex"].to_numpy()
+    return X_train, y_train, X_test, y_test
+
 
 def get_numpy_data(n=10000):
     train = pd.read_csv(PROCESSED_TRAIN_PATH)
@@ -43,6 +55,7 @@ def get_processed_data():
 
 
 def add_vectorized_text(data, model_fasttext):
+    data = data.drop([column for column in data.columns if column.startswith("vector_coord_")], axis=1)
     vectors = data["text"].apply(
         lambda x: model_fasttext.get_sentence_vector(x)
         if not pd.isnull(x)
@@ -103,6 +116,16 @@ def store_full_dataset_with_features(from_scratch=False, vectorize=True):
     if not "pagerank" in test.columns:
         test = add_features(test, get_page_rank(test["author"]))
     
+    if not "n_coauthors_with_hindex" in train.columns:
+        train = add_features(train, get_all_number_of_coauthors_with_hindex(train["author"]))
+    if not "n_coauthors_with_hindex" in test.columns:
+        test = add_features(test, get_all_number_of_coauthors_with_hindex(test["author"]))
+
+    if not "authority" in train.columns:
+        train = add_features(train, get_authority(train["author"]))
+    if not "authority" in test.columns:
+        test = add_features(test, get_authority(test["author"]))
+
     if not "hindex_lab" in train.columns:
         train = small_class(train, 6)
 
@@ -110,7 +133,7 @@ def store_full_dataset_with_features(from_scratch=False, vectorize=True):
         path_fasttext_text = "../tmp/fasttext_text.txt"
         df_to_txt(train, path_fasttext_text)
         model_fasttext = fasttext.train_supervised(
-            path_fasttext_text, lr=0.626905, dim=12, epoch=11, wordNgrams=3
+            path_fasttext_text, lr=0.15815, dim=2, epoch=33, wordNgrams=3
         )
         os.remove(path_fasttext_text)
         train = add_vectorized_text(train, model_fasttext)
