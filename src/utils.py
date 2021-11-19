@@ -40,8 +40,8 @@ def get_coauthors_hindex(author_id, G, train_data_json):
     ]
 
 
-def get_number_of_coauthors(author_id, G, train_data_json):
-    return len(get_coauthors_hindex(author_id, G, train_data_json))
+def get_number_of_coauthors(author_id, G):
+    return G.degree(author_id)
 
 
 def get_coauthors_min_mean_max_hindex(author_id, G, train_data_json):
@@ -87,10 +87,10 @@ def get_all_coauthors_mean_hindex(authors_ids, G, train_data_json):
     return hindex
 
 
-def get_all_number_of_coauthors(authors_ids, G, train_data_json):
+def get_all_number_of_coauthors(authors_ids, G):
     n_coauthors = {}
     for author_id in authors_ids:
-        n_coauthors[author_id] = get_number_of_coauthors(author_id, G, train_data_json)
+        n_coauthors[author_id] = get_number_of_coauthors(author_id, G)
     return n_coauthors
 
 
