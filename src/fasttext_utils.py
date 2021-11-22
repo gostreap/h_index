@@ -22,6 +22,7 @@ from utils import (
     get_max_coauthor_hindex,
     get_min_coauthor_hindex,
     get_all_number_of_second_degree_neighbors,
+    get_neighborhood_info,
     get_page_rank,
 )
 
@@ -52,7 +53,7 @@ def get_submission_data():
 
 def get_numpy_data(n=10000):
     train = pd.read_csv(PROCESSED_TRAIN_PATH)
-    train = train.sample(n=n, random_state=1)
+    train = train.sample(n=n)
     train, test = train_test_split(train, random_state=1)
     X_train = train.drop(
         ["author", "hindex", "text", "modindx", "hindex_lab"], axis=1
@@ -91,25 +92,27 @@ def add_features(data, new_features):
     return data.merge(new_features, left_on="author", right_on="author", how="inner")
 
 
-def clean_columns(data):
+def clean_columns(data, neighborhood_level=2):
     valid_columns = [
         "author",
         "hindex",
         "text",
         "nb_paper",
-        "mean_coauthors_hindex",
-        "n_coauthors",
         "core_number",
-        "min_coauthor_hindex",
-        "max_coauthor_hindex",
         "modindx",
         "hindex_lab",
         "n_coauthors_with_hindex",
         "pagerank",
         "authority",
-        "n_neighbors_of_neighbors",
-        "clustering_coef"
+        "clustering_coef",
     ]
+    for i in range(neighborhood_level):
+        valid_columns += [
+                "n_neighbors_dist_{}".format(i + 1),
+                "min_neighbors_dist_{}".format(i + 1),
+                "mean_neighbors_dist_{}".format(i + 1),
+                "max_neighbors_dist_{}".format(i + 1)
+            ]
     valid_columns += [column for column in data if column.startswith("vector_coord_")]
 
     for column in data.columns:
@@ -118,7 +121,9 @@ def clean_columns(data):
     return data
 
 
-def store_full_dataset_with_features(from_scratch=False, vectorize=True):
+def store_full_dataset_with_features(
+    from_scratch=False, vectorize=True, neighborhood_level=2
+):
 
     if from_scratch:
         train, _ = get_train_data()
@@ -133,11 +138,11 @@ def store_full_dataset_with_features(from_scratch=False, vectorize=True):
     train = pd.read_csv(PROCESSED_TRAIN_PATH)
     test = pd.read_csv(PROCESSED_TEST_PATH)
 
-    train = clean_columns(train)
-    test = clean_columns(test)
+    train = clean_columns(train, neighborhood_level=2)
+    test = clean_columns(test, neighborhood_level=2)
 
     print("Starting train columns :", list(train.columns))
-    print("Starting test columns :",list(test.columns))
+    print("Starting test columns :", list(test.columns))
 
     if not "core_number" in train.columns:
         print("Add core number to train")
@@ -146,37 +151,12 @@ def store_full_dataset_with_features(from_scratch=False, vectorize=True):
         print("Add core number to test")
         test = add_features(test, get_core_number(test["author"]))
 
-    if not "min_coauthor_hindex" in train.columns:
-        print("Add min coauthor hindex to train")
-        train = add_features(train, get_min_coauthor_hindex(train["author"]))
-    if not "min_coauthor_hindex" in test.columns:
-        print("Add min coauthor hindex to test")
-        test = add_features(test, get_min_coauthor_hindex(test["author"]))
-
-    if not "max_coauthor_hindex" in train.columns:
-        print("Add max coauthor hindex to train")
-        train = add_features(train, get_max_coauthor_hindex(train["author"]))
-    if not "max_coauthor_hindex" in test.columns:
-        print("Add max coauthor hindex to test")
-        test = add_features(test, get_max_coauthor_hindex(test["author"]))
-
     if not "pagerank" in train.columns:
         print("Add pagerank to train")
         train = add_features(train, get_page_rank(train["author"]))
     if not "pagerank" in test.columns:
         print("Add pagerank to test")
         test = add_features(test, get_page_rank(test["author"]))
-
-    if not "n_coauthors_with_hindex" in train.columns:
-        print("Add number of coauthors with hindex to train")
-        train = add_features(
-            train, get_all_number_of_coauthors_with_hindex(train["author"])
-        )
-    if not "n_coauthors_with_hindex" in test.columns:
-        print("Add number of coauthors with hindex to test")
-        test = add_features(
-            test, get_all_number_of_coauthors_with_hindex(test["author"])
-        )
 
     if not "authority" in train.columns:
         print("Add authority to train")
@@ -185,15 +165,15 @@ def store_full_dataset_with_features(from_scratch=False, vectorize=True):
         print("Add authority to test")
         test = add_features(test, get_authority(test["author"]))
 
-    if not "n_neighbors_of_neighbors" in train.columns:
-        print("Add number of neighbors of neighbors to train")
+    if not "n_neighbors_dist_{}".format(neighborhood_level) in train.columns:
+        print("Add neighborhood info to train")
         train = add_features(
-            train, get_all_number_of_second_degree_neighbors(train["author"])
+            train, get_neighborhood_info(train["author"], level=neighborhood_level)
         )
-    if not "n_neighbors_of_neighbors" in test.columns:
-        print("Add number of neighbors of neighbors to test")
+    if not "n_neighbors_dist_{}".format(neighborhood_level) in test.columns:
+        print("Add neighborhood info to test")
         test = add_features(
-            test, get_all_number_of_second_degree_neighbors(test["author"])
+            test, get_neighborhood_info(test["author"], level=neighborhood_level)
         )
 
     if not "clustering_coef" in train.columns:
@@ -202,7 +182,6 @@ def store_full_dataset_with_features(from_scratch=False, vectorize=True):
     if not "clustering_coef" in test.columns:
         print("Add clustering coef to test")
         test = add_features(test, get_clustering_coef(test["author"]))
-
 
     if not "hindex_lab" in train.columns:
         print("Add small class to train")
@@ -219,7 +198,7 @@ def store_full_dataset_with_features(from_scratch=False, vectorize=True):
         test = add_vectorized_text(test, model_fasttext)
 
     print("Ending train columns :", list(train.columns))
-    print("Ending test columns :",list(test.columns))
+    print("Ending test columns :", list(test.columns))
 
     train.to_csv(PROCESSED_TRAIN_PATH, index=None)
     test.to_csv(PROCESSED_TEST_PATH, index=None)

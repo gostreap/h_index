@@ -2,8 +2,10 @@ import networkx as nx
 import csv
 import json
 from networkx.algorithms.cluster import clustering
+from numpy import minimum
 import pandas as pd
 from read_data import get_graph, get_train_data_json
+from tqdm import tqdm
 
 
 def get_abstract_text(abstract):
@@ -53,7 +55,7 @@ def get_all_number_of_coauthors(authors_ids, G):
 
 
 def get_number_of_second_degree_neighbors(author_id, G: nx.Graph):
-    second_degree_neighbors = set()
+    second_degree_neighbors = set(G.neighbors(author_id))
     for neighbor in G.neighbors(author_id):
         second_degree_neighbors = second_degree_neighbors.union(set(G.neighbors(neighbor)))
     return len(second_degree_neighbors)
@@ -109,7 +111,7 @@ def get_coauthors_max_hindex(author_id, G, train_data_json):
 
 def get_all_coauthors_mean_hindex(authors_ids, G, train_data_json):
     hindex = {}
-    for author_id in authors_ids:
+    for author_id in tqdm(authors_ids):
         hindex[author_id] = get_coauthors_mean_hindex(author_id, G, train_data_json)
     return hindex
 
@@ -175,3 +177,50 @@ def get_max_coauthor_hindex(author_ids):
     ]
     df = pd.DataFrame({"author": author_ids, "max_coauthor_hindex": max_hindex})
     return df
+
+def get_hindex_info(author_ids, train_data_json):
+    "Return the min, the mean and the max of the known hindex of the author in author_ids"
+    hindexs = [
+        train_data_json[str(author_id)]
+        for author_id in author_ids
+        if str(author_id) in train_data_json
+    ]
+    if len(hindexs) > 0:
+        return (
+            min(hindexs),
+            sum(hindexs) / len(hindexs),
+            max(hindexs),
+        )
+    else:
+        return 1, 9.841160, 12
+
+
+def get_neighborhood_info(author_ids, level=2):
+    G, _, _ = get_graph()
+    train_data_json = get_train_data_json()
+    data = {"author": author_ids}
+    for i in range(level):
+        data["n_neighbors_dist_{}".format(i+1)] = []
+        data["min_neighbors_dist_{}".format(i+1)] = []
+        data["mean_neighbors_dist_{}".format(i+1)] = []
+        data["max_neighbors_dist_{}".format(i+1)] = []
+
+    for author_id in tqdm(author_ids):
+        neighbors = set()
+        for i in range(level):
+            if i == 0:
+                neighbors.update(list(G.neighbors(author_id)))
+            else:
+                new_neighbors = set()
+                for neighbor in neighbors:
+                    new_neighbors.update(list(G.neighbors(neighbor)))
+                neighbors.update(new_neighbors)
+            minimum, mean, maximum = get_hindex_info(neighbors, train_data_json)
+            data["n_neighbors_dist_{}".format(i+1)].append(len(neighbors))
+            data["min_neighbors_dist_{}".format(i+1)].append(minimum)
+            data["mean_neighbors_dist_{}".format(i+1)].append(mean)
+            data["max_neighbors_dist_{}".format(i+1)].append(maximum)
+    
+    print(len(data["author"]))
+    print(len(data["n_neighbors_dist_{}".format(i+1)]))
+    return pd.DataFrame(data)
