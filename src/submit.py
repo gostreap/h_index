@@ -1,5 +1,5 @@
 from read_data import get_train_data, get_test_data
-from fasttext_utils import get_submission_data, normalize, small_class, df_to_txt, format_data
+from fasttext_utils import get_submission_data, normalize, small_class, df_to_txt
 from utils import get_core_number, get_min_coauthor_hindex, get_max_coauthor_hindex, get_page_rank
 import pandas as pd
 import fasttext
