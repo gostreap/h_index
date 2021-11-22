@@ -19,7 +19,6 @@ from utils import (
     get_eigenvector_centrality,
     get_neighborhood_info,
     get_page_rank,
-    get_percolation_centrality,
 )
 
 
