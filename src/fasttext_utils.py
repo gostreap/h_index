@@ -16,8 +16,10 @@ from utils import (
     get_authority,
     get_clustering_coef,
     get_core_number,
+    get_eigenvector_centrality,
     get_neighborhood_info,
     get_page_rank,
+    get_percolation_centrality,
 )
 
 
@@ -92,6 +94,7 @@ def clean_columns(data, neighborhood_level=2):
         "text",
         "nb_paper",
         "core_number",
+        "eigenvector_centrality",
         "modindx",
         "hindex_lab",
         "n_coauthors_with_hindex",
@@ -149,6 +152,10 @@ def store_full_dataset_with_features(
     if not "clustering_coef" in data.columns:
         print("Add clustering coef to data")
         data = add_features(data, get_clustering_coef(data["author"]))
+
+    if not "eigenvector_centrality" in data.columns:
+        print("Add eigenvector centrality to data")
+        data = add_features(data, get_eigenvector_centrality(data["author"]))
 
     if not "hindex_lab" in data.columns:
         print("Add small class to data")

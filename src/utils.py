@@ -1,11 +1,8 @@
 import networkx as nx
-import csv
-import json
-from networkx.algorithms.cluster import clustering
-from numpy import minimum
 import pandas as pd
-from read_data import get_graph, get_train_data_json
 from tqdm import tqdm
+
+from read_data import get_graph, get_train_data_json
 
 
 def get_abstract_text(abstract):
@@ -28,6 +25,7 @@ def get_coauthors_hindex(author_id, G, train_data_json):
         for neighbor_id in G.neighbors(author_id)
         if str(neighbor_id) in train_data_json
     ]
+
 
 def get_number_of_coauthors_with_hindex(author_id, G, train_data_json):
     return len(get_coauthors_hindex(author_id, G, train_data_json))
@@ -78,6 +76,18 @@ def get_clustering_coef(author_ids):
     return df
 
 
+def get_eigenvector_centrality(author_ids):
+    G, _, _ = get_graph()
+    eigenvector_centralities = nx.algorithms.centrality.eigenvector_centrality(G)
+    author_eigenvector_centrality = [
+        eigenvector_centralities[author_id] for author_id in author_ids
+    ]
+    df = pd.DataFrame(
+        {"author": author_ids, "eigenvector_centrality": author_eigenvector_centrality}
+    )
+    return df
+
+
 def get_hindex_info(author_ids, train_data_json):
     "Return the min, the mean and the max of the known hindex of the author in author_ids"
     hindexs = [
@@ -119,6 +129,4 @@ def get_neighborhood_info(author_ids, level=2):
             data["mean_neighbors_dist_{}".format(i + 1)].append(mean)
             data["max_neighbors_dist_{}".format(i + 1)].append(maximum)
 
-    print(len(data["author"]))
-    print(len(data["n_neighbors_dist_{}".format(i + 1)]))
     return pd.DataFrame(data)
