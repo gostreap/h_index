@@ -21,9 +21,35 @@ from utils import (
     get_page_rank,
 )
 
+from d2vec import *
 
 PROCESSED_DATA_PATH = "../tmp/processed_data.csv"
 TRAIN_LENGTH = 174241
+
+
+def select_columns(data):
+    columns = [
+        "author",
+        "hindex",
+        "nb_paper",
+        "core_number",
+        "eigenvector_centrality",
+        # "n_coauthors_with_hindex",
+        "pagerank",
+        "authority",
+        "clustering_coef",
+        "n_neighbors_dist_1",
+        "min_neighbors_dist_1",
+        "mean_neighbors_dist_1",
+        "max_neighbors_dist_1",
+        # "n_neighbors_dist_2",
+        # "min_neighbors_dist_2",
+        # "mean_neighbors_dist_2",
+        # "max_neighbors_dist_2",
+        "vector_coord_0",
+        "vector_coord_1"
+    ]
+    return data[columns]
 
 
 def normalize(X_train, X_test):
@@ -48,6 +74,7 @@ def get_submission_data():
 
 def get_numpy_data(n=10000):
     train = pd.read_csv(PROCESSED_DATA_PATH)[:TRAIN_LENGTH]
+    print(len(train))
     train = train.sample(n=n, random_state=1)
     train, test = train_test_split(train, random_state=1)
     X_train = train.drop(
@@ -174,6 +201,8 @@ def store_full_dataset_with_features(
         )
         os.remove(path_fasttext_text)
         data = add_vectorized_text(data, model_fasttext)
+
+    # data = add_do2vec_to_whole_dataset(data)
 
     print("Ending data columns :", list(data.columns))
 
