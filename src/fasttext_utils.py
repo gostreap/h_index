@@ -32,23 +32,23 @@ def select_columns(data):
         "author",
         "hindex",
         "nb_paper",
-        "core_number",
-        "eigenvector_centrality",
+        # "core_number",
+        # "eigenvector_centrality",
         # "n_coauthors_with_hindex",
         "pagerank",
         "authority",
         "clustering_coef",
         "n_neighbors_dist_1",
-        "min_neighbors_dist_1",
+        # "min_neighbors_dist_1",
         "mean_neighbors_dist_1",
         "max_neighbors_dist_1",
         # "n_neighbors_dist_2",
         # "min_neighbors_dist_2",
         # "mean_neighbors_dist_2",
         # "max_neighbors_dist_2",
-        "vector_coord_0",
-        "vector_coord_1"
     ]
+    columns += [column for column in data if column.startswith("vector_coord_")]
+
     return data[columns]
 
 
@@ -62,7 +62,8 @@ def normalize(X_train, X_test):
 
 def get_submission_data():
     data = pd.read_csv(PROCESSED_DATA_PATH)
-    data = data.drop(["author", "text", "modindx", "hindex_lab"], axis=1)
+    data = select_columns(data)
+    data = data.drop("author", axis=1)
     train = data[:TRAIN_LENGTH]
     test = data[TRAIN_LENGTH:]
     X_train = train.drop("hindex", axis=1).to_numpy()
@@ -77,12 +78,14 @@ def get_numpy_data(n=10000):
     print(len(train))
     train = train.sample(n=n, random_state=1)
     train, test = train_test_split(train, random_state=1)
+    train = select_columns(train)
+    test = select_columns(test)
     X_train = train.drop(
-        ["author", "hindex", "text", "modindx", "hindex_lab"], axis=1
+        ["author", "hindex"], axis=1
     ).to_numpy()
     y_train = train["hindex"].to_numpy()
     X_test = test.drop(
-        ["author", "hindex", "text", "modindx", "hindex_lab"], axis=1
+        ["author", "hindex"], axis=1
     ).to_numpy()
     y_test = test["hindex"].to_numpy()
     return X_train, y_train, X_test, y_test
