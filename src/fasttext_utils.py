@@ -42,12 +42,14 @@ def select_columns(data):
         # "min_neighbors_dist_1",
         "mean_neighbors_dist_1",
         "max_neighbors_dist_1",
+        # "max-min_neighbors_dist_1",
         # "n_neighbors_dist_2",
         # "min_neighbors_dist_2",
         # "mean_neighbors_dist_2",
         # "max_neighbors_dist_2",
     ]
     columns += [column for column in data if column.startswith("vector_coord_")]
+    columns += [column for column in data if column.startswith("lda_cat_")]
 
     return data[columns]
 
@@ -73,7 +75,7 @@ def get_submission_data():
     return X_train, y_train, X_test, y_test
 
 
-def get_numpy_data(n=10000):
+def get_numpy_data(n=TRAIN_LENGTH):
     train = pd.read_csv(PROCESSED_DATA_PATH)[:TRAIN_LENGTH]
     print(len(train))
     train = train.sample(n=n, random_state=1)
@@ -91,10 +93,12 @@ def get_numpy_data(n=10000):
     return X_train, y_train, X_test, y_test
 
 
-def get_processed_data():
+def get_processed_data(split=True):
     data = pd.read_csv(PROCESSED_DATA_PATH)
-    return data[:TRAIN_LENGTH], data[TRAIN_LENGTH:]
-
+    if split:
+        return data[:TRAIN_LENGTH], data[TRAIN_LENGTH:]
+    else:
+        return data
 
 def add_vectorized_text(data, model_fasttext):
     data = data.drop(
@@ -130,6 +134,7 @@ def clean_columns(data, neighborhood_level=2):
         "pagerank",
         "authority",
         "clustering_coef",
+        "max-min_neighbors_dist_1"
     ]
     for i in range(neighborhood_level):
         valid_columns += [
@@ -195,6 +200,10 @@ def store_full_dataset_with_features(
         data = add_features(
             data, get_neighborhood_info(data["author"], level=neighborhood_level)
         )
+
+    if not "max-min_neighbors_dist_1" in data.columns:
+        print("Add max-min_neighbors_dist_1 to data")
+        data["max-min_neighbors_dist_1"] = data["max_neighbors_dist_1"] - data["min_neighbors_dist_1"]
     
     if vectorize:
         path_fasttext_text = "../tmp/fasttext_text.txt"
