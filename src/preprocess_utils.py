@@ -77,9 +77,8 @@ def get_submission_data():
 
 def get_numpy_data(n=TRAIN_LENGTH):
     train = pd.read_csv(PROCESSED_DATA_PATH)[:TRAIN_LENGTH]
-    print(len(train))
     train = train.sample(n=n, random_state=1)
-    train, test = train_test_split(train, random_state=1)
+    train, test = train_test_split(train)
     train = select_columns(train)
     test = select_columns(test)
     X_train = train.drop(
