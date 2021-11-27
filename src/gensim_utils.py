@@ -1,17 +1,15 @@
 from pprint import pprint  # pretty-printer
 from collections import defaultdict
 import numpy as np
-from preprocess_utils import get_processed_data
 from nltk.tokenize import RegexpTokenizer
 from tqdm import tqdm
 import pandas as pd
-from collections import defaultdict
 from gensim import corpora, models, similarities
 
 
 def tokenize_abstracts():
     """Takes as input the column 'text' from the dataframe returned by get_processed data and saves a tokenized text"""
-    docs = get_processed_data(split=False)["text"].to_list()
+    docs = pd.read_csv("../tmp/processed_data.csv")["text"].to_list()
 
     # Split the documents into tokens.
     tokenizer = RegexpTokenizer(r'\w+')
@@ -62,7 +60,7 @@ def similarityIndex(lsi_model,corpus,number_topics):
     return index
 
 
-def get_author_abstract_similarity(docs,n):
+def get_author_abstract_similarity(n):
     """computes a dataframe containing the n closest authors and value of similarities to every author"""
     lsi_model = models.LsiModel.load("../tmp/lsi")
     index = similarities.MatrixSimilarity.load('../tmp/gensim.index')
