@@ -32,14 +32,14 @@ def select_columns(data):
         "author",
         "hindex",
         "nb_paper",
-        # "core_number",
+        "core_number",
         # "eigenvector_centrality",
         # "n_coauthors_with_hindex",
         "pagerank",
         "authority",
         "clustering_coef",
         "n_neighbors_dist_1",
-        # "min_neighbors_dist_1",
+        "min_neighbors_dist_1",
         "mean_neighbors_dist_1",
         "max_neighbors_dist_1",
         # "max-min_neighbors_dist_1",
@@ -50,6 +50,8 @@ def select_columns(data):
     ]
     columns += [column for column in data if column.startswith("vector_coord_")]
     columns += [column for column in data if column.startswith("lda_cat_")]
+    columns += ["d2v{}".format(i) for i in range(1, 21)]
+    columns += ["tf{}".format(i) for i in range(1000)]
 
     return data[columns]
 
