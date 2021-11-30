@@ -130,3 +130,4 @@ def get_neighborhood_info(author_ids, level=2):
             data["max_neighbors_dist_{}".format(i + 1)].append(maximum)
 
     return pd.DataFrame(data)
+

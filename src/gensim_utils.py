@@ -5,12 +5,18 @@ from nltk.tokenize import RegexpTokenizer
 from tqdm import tqdm
 import pandas as pd
 from gensim import corpora, models, similarities
+import os
 
+def create_dic_authordid_lineauthor(data):
+    """returns a dictionnary linking the author id to the line of the author in the data dataframe"""
+    dic = {}
+    for index, row in data.iterrows():
+        dic[str(index)] = row["author"]
+    return dic
 
 def tokenize_abstracts():
     """Takes as input the column 'text' from the dataframe returned by get_processed data and saves a tokenized text"""
-    docs = pd.read_csv("../tmp/processed_data.csv")["text"].to_list()
-
+    docs = pd.read_csv("../tmp/data10000.csv")["text"].to_list()
     # Split the documents into tokens.
     tokenizer = RegexpTokenizer(r'\w+')
     docs = [doc if not pd.isnull(doc) else "" for doc in tqdm(docs) ]
@@ -62,18 +68,47 @@ def similarityIndex(lsi_model,corpus,number_topics):
 
 def get_author_abstract_similarity(n):
     """computes a dataframe containing the n closest authors and value of similarities to every author"""
-    lsi_model = models.LsiModel.load("../tmp/lsi")
-    index = similarities.MatrixSimilarity.load('../tmp/gensim.index')
-    loaded_corp = corpora.MmCorpus("../tmp/corpus")
-    vec = np.zeros((217801,2*n))
-    for i in tqdm(range(217801)):
+    num_authors = 10000
+    data = pd.read_csv("../tmp/data10000.csv")
+    authorline_toID = create_dic_authordid_lineauthor(data)
+    lsi_model = models.LsiModel.load(r"../tmp/lsi")
+    index = similarities.MatrixSimilarity.load(r"../tmp/gensim.index")
+    loaded_corp = corpora.MmCorpus(r"../tmp/corpus")
+    
+    temp_data =np.zeros((num_authors,2*n))
+    for i in tqdm(range(num_authors)):
         vec_lsi = lsi_model[loaded_corp[i]]
         sims = index[vec_lsi]
         sims = sorted(enumerate(sims), key=lambda item: -item[1])
         for j in range (n):
-            vec[i,2*j] = sims[j+1][0]
-            vec[i,2*j+1] = sims[j+1][1]
-
-    data = pd.DataFrame(vec)
-    data.to_csv("../tmp/similGraph.csv")
-    return data
+            temp_data[i,2*j] = authorline_toID[str(sims[j+1][0])]
+            temp_data[i,2*j+1] = sims[j+1][1]
+    temp_data = pd.DataFrame(temp_data)
+    temp_data.insert(0,"author",pd.read_csv("../tmp/data10000.csv")["author"].to_list())
+    temp_data.to_csv("../tmp/similGraph_full.csv", index=None)
+    # start = 0
+    # end = 1000
+    # pas = 1000
+    # ind = 0
+    # while start < num_authors:
+    #     temp_data =np.zeros((pas,2*n))
+    #     for i in tqdm(range(start,end)):
+    #         vec_lsi = lsi_model[loaded_corp[i]]
+    #         sims = index[vec_lsi]
+    #         sims = sorted(enumerate(sims), key=lambda item: -item[1])
+    #         for j in range (n):
+    #             temp_data[i%pas,2*j] = sims[j+1][0]
+    #             temp_data[i%pas,2*j+1] = sims[j+1][1]
+    #     pd.DataFrame(temp_data).to_csv("../tmp/similGraph" + str(ind) + ".csv", index=None)
+    #     start = end
+    #     end = end + pas if end + pas <= num_authors else num_authors
+    #     ind+=1
+    
+    # data_parts = []
+    # for i in range(0, ind):
+    #     part_path = "../tmp/similGraph"  + str(i) + ".csv"
+    #     data_parts.append(pd.read_csv(part_path))
+    #     os.remove(part_path)
+    # data = pd.concat(data_parts)
+    # data.insert(0,"author",pd.read_csv("../tmp/data_10000.csv")["author"].to_list())
+    # data.to_csv("../tmp/similGraph"  + "_full.csv", index=None)
