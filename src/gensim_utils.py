@@ -14,9 +14,10 @@ def create_dic_authordid_lineauthor(data):
         dic[str(index)] = row["author"]
     return dic
 
-def tokenize_abstracts():
+def tokenize_abstracts(docs):
     """Takes as input the column 'text' from the dataframe returned by get_processed data and saves a tokenized text"""
-    docs = pd.read_csv("../tmp/data10000.csv")["text"].to_list()
+    docs = docs.to_list()
+    # docs = pd.read_csv("../tmp/data10000.csv")["text"].to_list()
     # Split the documents into tokens.
     tokenizer = RegexpTokenizer(r'\w+')
     docs = [doc if not pd.isnull(doc) else "" for doc in tqdm(docs) ]
