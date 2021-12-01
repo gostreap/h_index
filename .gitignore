@@ -3,6 +3,7 @@ data/abstracts.txt
 tmp/
 catboost_info/
 .tmp.driveupload
+.DS_Store
 
 # vscode
 .vscode
