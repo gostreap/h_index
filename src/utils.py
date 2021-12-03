@@ -67,6 +67,12 @@ def get_authority(author_ids):
     df = pd.DataFrame({"author": author_ids, "authority": author_authority})
     return df
 
+def get_betweenness_centrality(author_ids):
+    G, _, _ = get_graph()
+    betweenness_centrality = nx.betweenness_centrality(G)
+    author_betweenness_centrality = [betweenness_centrality[author_id] for author_id in author_ids]
+    df = pd.DataFrame({"author": author_ids, "betweenness_centrality": author_betweenness_centrality})
+    return df
 
 def get_clustering_coef(author_ids):
     G, _, _ = get_graph()
