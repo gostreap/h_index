@@ -34,7 +34,7 @@ def get_nk_graph():
     reader = nk.graphio.EdgeListReader(" ", 0, continuous=False)
     G = reader.read("../data/coauthorship.edgelist")
     node_map = reader.getNodeMap()
-    return reader, node_map
+    return G, node_map
 
 def get_abstracts(n_lines=0):
     abstracts_file = open("../data/abstracts.txt", "r")
