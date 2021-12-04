@@ -1,5 +1,5 @@
 import networkx as nx
-import networkx as nk
+import networkit as nk
 import pandas as pd
 from tqdm import tqdm
 
