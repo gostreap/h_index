@@ -139,6 +139,36 @@ def get_harmonic(author_ids):
     )
     return df
 
+def get_permanence(author_ids):
+    G, node_map = get_nk_graph()
+    
+    permanence_model = nk.centrality.PermanenceCentrality(G, 100)
+    permanence_model.run()
+    
+    permanence = []
+    for author_id in author_ids:
+        permanence.append(permanence_model.score(node_map[str(author_id)]))
+
+    df = pd.DataFrame(
+        {"author": author_ids, "permanence": permanence}
+    )
+    return df
+
+def get_katz(author_ids):
+    G, node_map = get_nk_graph()
+    
+    katz_model = nk.centrality.KatzCentrality(G, tol=1e-12)
+    katz_model.run()
+    
+    katz = []
+    for author_id in author_ids:
+        katz.append(katz_model.score(node_map[str(author_id)]))
+
+    df = pd.DataFrame(
+        {"author": author_ids, "katz": katz}
+    )
+    return df
+
 def get_hindex_info(author_ids, train_data_json):
     "Return the min, the mean and the max of the known hindex of the author in author_ids"
     hindexs = [

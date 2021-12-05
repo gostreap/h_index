@@ -19,6 +19,7 @@ from utils import (
     get_eigenvector_centrality,
     get_neighborhood_info,
     get_page_rank,
+    get_katz
 )
 
 from d2vec import *
@@ -42,6 +43,8 @@ def select_columns(data):
         "min_neighbors_dist_1",
         "mean_neighbors_dist_1",
         "max_neighbors_dist_1",
+        "closeness",
+        "clus_text"
         # "max-min_neighbors_dist_1",
         # "n_neighbors_dist_2",
         # "min_neighbors_dist_2",
@@ -135,7 +138,11 @@ def clean_columns(data, neighborhood_level=2):
         "pagerank",
         "authority",
         "clustering_coef",
-        "max-min_neighbors_dist_1"
+        "max-min_neighbors_dist_1",
+        "katz",
+        "closeness",
+        "harmonic",
+        "clus_text"
     ]
     for i in range(neighborhood_level):
         valid_columns += [
