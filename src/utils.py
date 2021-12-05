@@ -112,7 +112,7 @@ def get_approx_closeness(author_ids, n_samples=2000):
 def get_closeness(author_ids):
     G, node_map = get_nk_graph()
     
-    closeness_model = nk.centrality.Closeness(G)
+    closeness_model = nk.centrality.Closeness(G, False, True)
     closeness_model.run()
     
     closeness = []
