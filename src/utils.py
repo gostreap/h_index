@@ -109,6 +109,21 @@ def get_approx_closeness(author_ids, n_samples=2000):
     )
     return df
 
+def get_closeness(author_ids):
+    G, node_map = get_nk_graph()
+    
+    closeness_model = nk.centrality.Closeness(G)
+    closeness_model.run()
+    
+    closeness = []
+    for author_id in author_ids:
+        closeness.append(closeness_model.score(node_map[str(author_id)]))
+
+    df = pd.DataFrame(
+        {"author": author_ids, "closeness": closeness}
+    )
+    return df
+
 def get_hindex_info(author_ids, train_data_json):
     "Return the min, the mean and the max of the known hindex of the author in author_ids"
     hindexs = [
