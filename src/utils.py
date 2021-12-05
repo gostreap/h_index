@@ -124,6 +124,21 @@ def get_closeness(author_ids):
     )
     return df
 
+def get_harmonic(author_ids):
+    G, node_map = get_nk_graph()
+    
+    harmonic_model = nk.centrality.HarmonicCloseness(G)
+    harmonic_model.run()
+    
+    harmonic = []
+    for author_id in author_ids:
+        harmonic.append(harmonic_model.score(node_map[str(author_id)]))
+
+    df = pd.DataFrame(
+        {"author": author_ids, "harmonic": harmonic}
+    )
+    return df
+
 def get_hindex_info(author_ids, train_data_json):
     "Return the min, the mean and the max of the known hindex of the author in author_ids"
     hindexs = [
