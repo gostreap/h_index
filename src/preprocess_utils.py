@@ -19,12 +19,12 @@ from utils import (
     get_eigenvector_centrality,
     get_neighborhood_info,
     get_page_rank,
-    get_katz
+    get_triangles
 )
 
 from d2vec import *
 
-PROCESSED_DATA_PATH = "../tmp/processed_data.csv"
+PROCESSED_DATA_PATH = "../tmp/processed_data_old.csv"
 TRAIN_LENGTH = 174241
 
 
@@ -44,7 +44,8 @@ def select_columns(data):
         "mean_neighbors_dist_1",
         "max_neighbors_dist_1",
         "closeness",
-        "clus_text"
+        "clus_text",
+        "triangles"
         # "max-min_neighbors_dist_1",
         # "n_neighbors_dist_2",
         # "min_neighbors_dist_2",
@@ -53,8 +54,8 @@ def select_columns(data):
     ]
     columns += [column for column in data if column.startswith("vector_coord_")]
     columns += [column for column in data if column.startswith("lda_cat_")]
-    columns += ["d2v{}".format(i) for i in range(1, 21)]
-    columns += ["tf{}".format(i) for i in range(1000)]
+    columns += [column for column in data if column.startswith("d2v")]
+    columns += [column for column in data if column.startswith("tf")]
 
     return data[columns]
 
@@ -142,7 +143,8 @@ def clean_columns(data, neighborhood_level=2):
         "katz",
         "closeness",
         "harmonic",
-        "clus_text"
+        "clus_text",
+        "triangles"
     ]
     for i in range(neighborhood_level):
         valid_columns += [
@@ -152,6 +154,8 @@ def clean_columns(data, neighborhood_level=2):
                 "max_neighbors_dist_{}".format(i + 1)
             ]
     valid_columns += [column for column in data if column.startswith("vector_coord_")]
+    valid_columns += [column for column in data if column.startswith("d2v")]
+    valid_columns += [column for column in data if column.startswith("tf")]
 
     for column in data.columns:
         if column not in valid_columns:
@@ -198,6 +202,10 @@ def store_full_dataset_with_features(
     if not "eigenvector_centrality" in data.columns:
         print("Add eigenvector centrality to data")
         data = add_features(data, get_eigenvector_centrality(data["author"]))
+
+    if not "triangles" in data.columns:
+        print("Add triangles to data")
+        data = add_features(data, get_triangles(data["author"]))
 
     if not "hindex_lab" in data.columns:
         print("Add small class to data")
