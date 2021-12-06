@@ -1,5 +1,6 @@
 import networkx as nx
 import networkit as nk
+from networkx.algorithms.cluster import triangles
 import pandas as pd
 from tqdm import tqdm
 
@@ -73,6 +74,13 @@ def get_betweenness_centrality(author_ids):
     betweenness_centrality = nx.betweenness_centrality(G)
     author_betweenness_centrality = [betweenness_centrality[author_id] for author_id in author_ids]
     df = pd.DataFrame({"author": author_ids, "betweenness_centrality": author_betweenness_centrality})
+    return df
+
+def get_triangles(author_ids):
+    G, _, _ = get_graph()
+    triangles = nx.algorithms.cluster.triangles(G)
+    author_triangles = [triangles[author_id] for author_id in author_ids]
+    df = pd.DataFrame({"author": author_ids, "triangles": author_triangles})
     return df
 
 def get_clustering_coef(author_ids):
@@ -185,6 +193,21 @@ def get_hindex_info(author_ids, train_data_json):
     else:
         return 1, 9.841160, 12
 
+def get_mean_neighbors_degree(author_ids):
+    G, _, _ = get_graph()
+    mean_degree = []
+    for author_id in tqdm(author_ids):
+        neighbors = G.neighbors(author_id)
+        total = 0
+        for neighbor in neighbors:
+            total += G.degree(neighbor)
+        if len(list(neighbors)) != 0:
+            mean_degree.append(total/len(list(neighbors)))
+        else: mean_degree.append(0)
+    df = pd.DataFrame(
+        {"author": author_ids, "mean_neighbors_degree": mean_degree}
+    )
+    return df
 
 def get_neighborhood_info(author_ids, level=2):
     G, _, _ = get_graph()
