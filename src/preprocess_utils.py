@@ -24,7 +24,7 @@ from utils import (
 
 from d2vec import *
 
-PROCESSED_DATA_PATH = "../tmp/processed_data_old.csv"
+PROCESSED_DATA_PATH = "../tmp/processed_data.csv"
 TRAIN_LENGTH = 174241
 
 
@@ -44,7 +44,7 @@ def select_columns(data):
         "mean_neighbors_dist_1",
         "max_neighbors_dist_1",
         "closeness",
-        "clus_text",
+        # "clus_text",
         "triangles"
         # "max-min_neighbors_dist_1",
         # "n_neighbors_dist_2",
