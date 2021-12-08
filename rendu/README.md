@@ -31,4 +31,4 @@ train.csv
 
 ## Run
 
-Then you just have to run the notebook jupyter main.ipynb.  Be careful, the data generation is long and requires a lot of resources.
+Then you just have to run the jupyter notebook `src/main.ipynb`.  Be careful, the data generation is long and requires a lot of resources.
