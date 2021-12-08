@@ -45,7 +45,7 @@ def add_do2vec_to_whole_dataset(dataset):
     dic = {'i':0}
     D2vec = dataset['text'].apply(lambda x:vectorizer(x,model,dic,dataset.shape[0]))
     #print(D2vec)
-    D2vec2 = pd.DataFrame(list(D2vec))
+    D2vec2 = pd.DataFrame(list(D2vec),columns=["d2v"+str(i) for i in range(20)])
     #print(D2vec2)
     D2vec2.index = dataset.index
     
