@@ -38,7 +38,6 @@ def select_columns(data):
         "nb_paper",
         "core_number",
         "pagerank",
-        "authority",
         "clustering_coef",
         "n_neighbors_dist_1",
         "min_neighbors_dist_1",
@@ -46,7 +45,9 @@ def select_columns(data):
         "max_neighbors_dist_1",
         "triangles"
     ]
-    if "closeness" in data:
+    if "authority" in data.columns:
+        columns.append("authority")
+    if "closeness" in data.columns:
         columns.append("closeness")
     columns += [column for column in data if column.startswith("fasttext")]
     columns += [column for column in data if column.startswith("d2v")]
@@ -101,6 +102,7 @@ def get_processed_data(split=True):
         return data
 
 def add_vectorized_text(data, model_fasttext):
+    print("Add fasttext to data")
     data = data.drop(
         [column for column in data.columns if column.startswith("fasttext")],
         axis=1,
@@ -136,6 +138,9 @@ def add_tf_idf(data, n_features=1000):
 def add_features(data, new_features):
     return data.merge(new_features, left_on="author", right_on="author", how="inner")
 
+def add_authorithy(data):
+    print("Add authority to data")
+    return add_features(data, get_authority(data["author"]))
 
 def clean_columns(data, neighborhood_level=1):
     valid_columns = [
@@ -202,10 +207,6 @@ def store_full_dataset_with_features(
     if not "pagerank" in data.columns:
         print("Add pagerank to data")
         data = add_features(data, get_page_rank(data["author"]))
-
-    if not "authority" in data.columns:
-        print("Add authority to data")
-        data = add_features(data, get_authority(data["author"]))
 
     if not "clustering_coef" in data.columns:
         print("Add clustering coef to data")
