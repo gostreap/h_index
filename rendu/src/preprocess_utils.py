@@ -312,12 +312,18 @@ def get_authors_id_by_papers_id_dict(ids):
                 author_papers[int(paper_id)] = int(author_id)
     return author_papers
 
+def predict_small(x,A):
+  i = 0
+  while(x>=A[i] and i<len(A)-1):
+    i+=1
+  return i
 
 def small_class(data, k):
     index = np.sort(np.array(data[:TRAIN_LENGTH]["hindex"].to_list())).reshape(-1, 1)
     clusters = KMeans(n_clusters=k, random_state=1).fit(index)
+    A = np.sort(clusters.cluster_centers_.flatten())
     data["modindx"] = data["hindex"].apply(
-        lambda x: clusters.predict([[x]])[0] if not pd.isnull(x) else None
+        lambda x: predict_small(x,A) if not pd.isnull(x) else None
     )
     data["hindex_lab"] = data["modindx"].apply(
         lambda x: "__label__" + str(x) if not pd.isnull(x) else None
