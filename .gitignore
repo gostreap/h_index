@@ -1,6 +1,8 @@
 # Project related ignored files
 data/abstracts.txt
 tmp/
+rendu/data/
+rendu/tmp/
 catboost_info/
 .tmp.driveupload
 
