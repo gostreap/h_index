@@ -1,6 +1,7 @@
 import json
-import networkx as nx
+
 import networkit as nk
+import networkx as nx
 import numpy as np
 import pandas as pd
 
@@ -30,11 +31,13 @@ def get_graph():
     n_edges = G.number_of_edges()
     return G, n_nodes, n_edges
 
+
 def get_nk_graph():
     reader = nk.graphio.EdgeListReader(" ", 0, continuous=False)
     G = reader.read("../data/coauthorship.edgelist")
     node_map = reader.getNodeMap()
     return G, node_map
+
 
 def get_abstracts(n_lines=0):
     abstracts_file = open("../data/abstracts.txt", "r")

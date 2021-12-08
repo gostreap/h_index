@@ -6,8 +6,7 @@ import pandas as pd
 from networkx.algorithms.cluster import triangles
 from tqdm import tqdm
 
-from read_data import (get_graph, get_nk_graph, get_train_data,
-                       get_train_data_json)
+from read_data import get_graph, get_nk_graph, get_train_data, get_train_data_json
 
 
 def write_train_data_json():

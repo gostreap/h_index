@@ -8,8 +8,11 @@ import pandas as pd
 from gensim.utils import simple_preprocess
 from networkx.algorithms.link_analysis.pagerank_alg import pagerank
 from sklearn.cluster import KMeans
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
 
+from d2vec import *
 from read_data import get_graph, get_test_data, get_train_data, get_train_data_json
 from utils import (
     get_abstract_text,
@@ -19,13 +22,8 @@ from utils import (
     get_eigenvector_centrality,
     get_neighborhood_info,
     get_page_rank,
-    get_triangles
+    get_triangles,
 )
-
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.impute import SimpleImputer
-
-from d2vec import *
 
 PROCESSED_DATA_PATH = "../tmp/processed_data.csv"
 TRAIN_LENGTH = 174241
@@ -43,7 +41,7 @@ def select_columns(data):
         "min_neighbors_dist_1",
         "mean_neighbors_dist_1",
         "max_neighbors_dist_1",
-        "triangles"
+        "triangles",
     ]
     if "authority" in data.columns:
         columns.append("authority")
@@ -80,16 +78,12 @@ def get_submission_data():
 def get_numpy_data(n=TRAIN_LENGTH):
     train = pd.read_csv(PROCESSED_DATA_PATH)[:TRAIN_LENGTH]
     train = train.sample(n=n, random_state=1)
-    train, test = train_test_split(train, random_state =1)
+    train, test = train_test_split(train, random_state=1)
     train = select_columns(train)
     test = select_columns(test)
-    X_train = train.drop(
-        ["author", "hindex"], axis=1
-    ).to_numpy()
+    X_train = train.drop(["author", "hindex"], axis=1).to_numpy()
     y_train = train["hindex"].to_numpy()
-    X_test = test.drop(
-        ["author", "hindex"], axis=1
-    ).to_numpy()
+    X_test = test.drop(["author", "hindex"], axis=1).to_numpy()
     y_test = test["hindex"].to_numpy()
     return X_train, y_train, X_test, y_test
 
@@ -101,11 +95,11 @@ def get_processed_data(split=True):
     else:
         return data
 
+
 def add_vectorized_text(data, model_fasttext):
     print("Add fasttext to data")
     data = data.drop(
-        [column for column in data.columns if column.startswith("fasttext")],
-        axis=1,
+        [column for column in data.columns if column.startswith("fasttext")], axis=1,
     )
     vectors = data["text"].apply(
         lambda x: model_fasttext.get_sentence_vector(x)
@@ -117,20 +111,23 @@ def add_vectorized_text(data, model_fasttext):
     vectors_df["author"] = data["author"]
     return add_features(data, vectors_df)
 
+
 def add_tf_idf(data, n_features=1000):
     columns = [column for column in data if column.startswith("tf")]
     data = data.drop(columns, axis=1)
 
-    full_data = data[['author','text']]
+    full_data = data[["author", "text"]]
     data = full_data[-full_data.text.isna()]
-    vectorizer = TfidfVectorizer(max_features = n_features)
+    vectorizer = TfidfVectorizer(max_features=n_features)
     X = vectorizer.fit_transform(data.text.values)
-    tfid = pd.DataFrame(X.toarray(),columns=["tf"+str(i) for i in range(n_features)])
+    tfid = pd.DataFrame(X.toarray(), columns=["tf" + str(i) for i in range(n_features)])
     tfid.index = full_data[-full_data.text.isna()].index
-    datavf = pd.concat([full_data[['author']],tfid], axis=1)
+    datavf = pd.concat([full_data[["author"]], tfid], axis=1)
 
-    r = SimpleImputer(strategy='mean').fit_transform(datavf[["tf"+str(i) for i in range(n_features)]])
-    datavf[["tf"+str(i) for i in range(n_features)]] = r
+    r = SimpleImputer(strategy="mean").fit_transform(
+        datavf[["tf" + str(i) for i in range(n_features)]]
+    )
+    datavf[["tf" + str(i) for i in range(n_features)]] = r
 
     data = add_features(data, datavf)
 
@@ -138,9 +135,11 @@ def add_tf_idf(data, n_features=1000):
 def add_features(data, new_features):
     return data.merge(new_features, left_on="author", right_on="author", how="inner")
 
+
 def add_authorithy(data):
     print("Add authority to data")
     return add_features(data, get_authority(data["author"]))
+
 
 def clean_columns(data, neighborhood_level=1):
     valid_columns = [
@@ -161,15 +160,15 @@ def clean_columns(data, neighborhood_level=1):
         "closeness",
         "harmonic",
         "clus_text",
-        "triangles"
+        "triangles",
     ]
     for i in range(neighborhood_level):
         valid_columns += [
-                "n_neighbors_dist_{}".format(i + 1),
-                "min_neighbors_dist_{}".format(i + 1),
-                "mean_neighbors_dist_{}".format(i + 1),
-                "max_neighbors_dist_{}".format(i + 1)
-            ]
+            "n_neighbors_dist_{}".format(i + 1),
+            "min_neighbors_dist_{}".format(i + 1),
+            "mean_neighbors_dist_{}".format(i + 1),
+            "max_neighbors_dist_{}".format(i + 1),
+        ]
     valid_columns += [column for column in data if column.startswith("fasttext")]
     valid_columns += [column for column in data if column.startswith("d2v")]
     valid_columns += [column for column in data if column.startswith("tf")]
@@ -317,8 +316,12 @@ def get_authors_id_by_papers_id_dict(ids):
 def small_class(data, k):
     index = np.sort(np.array(data[:TRAIN_LENGTH]["hindex"].to_list())).reshape(-1, 1)
     clusters = KMeans(n_clusters=k, random_state=1).fit(index)
-    data["modindx"] = data["hindex"].apply(lambda x: clusters.predict([[x]])[0] if not pd.isnull(x) else None)
-    data["hindex_lab"] = data["modindx"].apply(lambda x: "__label__" + str(x) if not pd.isnull(x) else None)
+    data["modindx"] = data["hindex"].apply(
+        lambda x: clusters.predict([[x]])[0] if not pd.isnull(x) else None
+    )
+    data["hindex_lab"] = data["modindx"].apply(
+        lambda x: "__label__" + str(x) if not pd.isnull(x) else None
+    )
     return data
 
 
@@ -328,7 +331,7 @@ def preprocessing_for_fasttext(data, start=0, end=0):
     author_ids = sample_data["author"].to_list()
     paper_id_to_author_id = get_authors_id_by_papers_id_dict(author_ids)
     abstract = get_all_text_by_author_id(paper_id_to_author_id)
-    
+
     abstract_text_by_author_id = {}
     for author_id in abstract.keys():
         abstract_text_by_author_id[author_id] = [
