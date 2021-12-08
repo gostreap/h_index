@@ -117,9 +117,9 @@ def add_tf_idf(data, n_features=1000):
     data = data.drop(columns, axis=1)
 
     full_data = data[["author", "text"]]
-    data = full_data[-full_data.text.isna()]
+    data2 = full_data[-full_data.text.isna()]
     vectorizer = TfidfVectorizer(max_features=n_features)
-    X = vectorizer.fit_transform(data.text.values)
+    X = vectorizer.fit_transform(data2.text.values)
     tfid = pd.DataFrame(X.toarray(), columns=["tf" + str(i) for i in range(n_features)])
     tfid.index = full_data[-full_data.text.isna()].index
     datavf = pd.concat([full_data[["author"]], tfid], axis=1)
@@ -130,6 +130,7 @@ def add_tf_idf(data, n_features=1000):
     datavf[["tf" + str(i) for i in range(n_features)]] = r
 
     data = add_features(data, datavf)
+    return data
 
 
 def add_features(data, new_features):
