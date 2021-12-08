@@ -115,8 +115,6 @@ def add_vectorized_text(data, model_fasttext):
     return add_features(data, vectors_df)
 
 def add_tf_idf(data, n_features=1000):
-    select_columns(data)
-
     columns = [column for column in data if column.startswith("tf")]
     data = data.drop(columns, axis=1)
 
