@@ -12,7 +12,6 @@ fasttext
 gensim
 networkit
 networkx
-nltk
 numpy
 pandas
 sklearn
