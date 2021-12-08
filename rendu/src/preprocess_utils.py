@@ -75,10 +75,10 @@ def get_submission_data():
     return X_train, y_train, X_test, y_test
 
 
-def get_numpy_data(n=TRAIN_LENGTH):
+def get_split_train_data(n=TRAIN_LENGTH):
     train = pd.read_csv(PROCESSED_DATA_PATH)[:TRAIN_LENGTH]
-    train = train.sample(n=n, random_state=1)
-    train, test = train_test_split(train, random_state=1)
+    train = train.sample(n=n)
+    train, test = train_test_split(train)
     train = select_columns(train)
     test = select_columns(test)
     X_train = train.drop(["author", "hindex"], axis=1).to_numpy()
@@ -198,6 +198,10 @@ def store_full_dataset_with_features(
     data = clean_columns(data, neighborhood_level=neighborhood_level)
 
     print("Starting data columns :", list(data.columns))
+    
+    if not "hindex_lab" in data.columns:
+        print("Add small class to data")
+        data = small_class(data, 6)
 
     if not "core_number" in data.columns:
         print("Add core number to data")
@@ -215,9 +219,6 @@ def store_full_dataset_with_features(
         print("Add triangles to data")
         data = add_features(data, get_triangles(data["author"]))
 
-    if not "hindex_lab" in data.columns:
-        print("Add small class to data")
-        data = small_class(data, 6)
 
     if not "n_neighbors_dist_{}".format(neighborhood_level) in data.columns:
         print("Add neighborhood info to data")

@@ -12,8 +12,8 @@ from read_data import get_graph, get_nk_graph, get_train_data, get_train_data_js
 def write_train_data_json():
     train, _ = get_train_data()
     train_data_json = {}
-    for row in train.iterrows():
-        train_data_json[str(row["author"])] = int(row["hindex"])
+    for _, row in train.iterrows():
+        train_data_json[str(int(row["author"]))] = int(row["hindex"])
     with open("../data/train.json", "w") as f:
         json.dump(train_data_json, f)
 
