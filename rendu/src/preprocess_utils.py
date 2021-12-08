@@ -44,9 +44,10 @@ def select_columns(data):
         "min_neighbors_dist_1",
         "mean_neighbors_dist_1",
         "max_neighbors_dist_1",
-        "closeness",
         "triangles"
     ]
+    if "closeness" in data:
+        columns.append("closeness")
     columns += [column for column in data if column.startswith("fasttext")]
     columns += [column for column in data if column.startswith("d2v")]
     columns += [column for column in data if column.startswith("tf")]
