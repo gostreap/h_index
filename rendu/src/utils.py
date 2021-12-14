@@ -1,10 +1,21 @@
-import networkx as nx
+import json
+
 import networkit as nk
-from networkx.algorithms.cluster import triangles
+import networkx as nx
 import pandas as pd
+from networkx.algorithms.cluster import triangles
 from tqdm import tqdm
 
-from read_data import get_graph, get_nk_graph, get_train_data_json
+from read_data import get_graph, get_nk_graph, get_train_data, get_train_data_json
+
+
+def write_train_data_json():
+    train, _ = get_train_data()
+    train_data_json = {}
+    for _, row in train.iterrows():
+        train_data_json[str(int(row["author"]))] = int(row["hindex"])
+    with open("../data/train.json", "w") as f:
+        json.dump(train_data_json, f)
 
 
 def get_abstract_text(abstract):
@@ -69,12 +80,18 @@ def get_authority(author_ids):
     df = pd.DataFrame({"author": author_ids, "authority": author_authority})
     return df
 
+
 def get_betweenness_centrality(author_ids):
     G, _, _ = get_graph()
     betweenness_centrality = nx.betweenness_centrality(G)
-    author_betweenness_centrality = [betweenness_centrality[author_id] for author_id in author_ids]
-    df = pd.DataFrame({"author": author_ids, "betweenness_centrality": author_betweenness_centrality})
+    author_betweenness_centrality = [
+        betweenness_centrality[author_id] for author_id in author_ids
+    ]
+    df = pd.DataFrame(
+        {"author": author_ids, "betweenness_centrality": author_betweenness_centrality}
+    )
     return df
+
 
 def get_triangles(author_ids):
     G, _, _ = get_graph()
@@ -82,6 +99,7 @@ def get_triangles(author_ids):
     author_triangles = [triangles[author_id] for author_id in author_ids]
     df = pd.DataFrame({"author": author_ids, "triangles": author_triangles})
     return df
+
 
 def get_clustering_coef(author_ids):
     G, _, _ = get_graph()
@@ -102,80 +120,76 @@ def get_eigenvector_centrality(author_ids):
     )
     return df
 
+
 def get_approx_closeness(author_ids, n_samples=2000):
     G, node_map = get_nk_graph()
-    
+
     approx_closeness_model = nk.centrality.ApproxCloseness(G, n_samples)
     approx_closeness_model.run()
-    
+
     approx_closeness = []
     for author_id in author_ids:
         approx_closeness.append(approx_closeness_model.score(node_map[str(author_id)]))
 
-    df = pd.DataFrame(
-        {"author": author_ids, "approx_closeness": approx_closeness}
-    )
+    df = pd.DataFrame({"author": author_ids, "approx_closeness": approx_closeness})
     return df
+
 
 def get_closeness(author_ids):
     G, node_map = get_nk_graph()
-    
+
     closeness_model = nk.centrality.Closeness(G, False, True)
     closeness_model.run()
-    
+
     closeness = []
     for author_id in author_ids:
         closeness.append(closeness_model.score(node_map[str(author_id)]))
 
-    df = pd.DataFrame(
-        {"author": author_ids, "closeness": closeness}
-    )
+    df = pd.DataFrame({"author": author_ids, "closeness": closeness})
     return df
+
 
 def get_harmonic(author_ids):
     G, node_map = get_nk_graph()
-    
+
     harmonic_model = nk.centrality.HarmonicCloseness(G)
     harmonic_model.run()
-    
+
     harmonic = []
     for author_id in author_ids:
         harmonic.append(harmonic_model.score(node_map[str(author_id)]))
 
-    df = pd.DataFrame(
-        {"author": author_ids, "harmonic": harmonic}
-    )
+    df = pd.DataFrame({"author": author_ids, "harmonic": harmonic})
     return df
+
 
 def get_permanence(author_ids):
     G, node_map = get_nk_graph()
-    
+
     permanence_model = nk.centrality.PermanenceCentrality(G, 100)
     permanence_model.run()
-    
+
     permanence = []
     for author_id in author_ids:
         permanence.append(permanence_model.score(node_map[str(author_id)]))
 
-    df = pd.DataFrame(
-        {"author": author_ids, "permanence": permanence}
-    )
+    df = pd.DataFrame({"author": author_ids, "permanence": permanence})
     return df
+
 
 def get_katz(author_ids):
     G, node_map = get_nk_graph()
-    
+
     katz_model = nk.centrality.KatzCentrality(G, tol=1e-12)
     katz_model.run()
-    
+
     katz = []
     for author_id in author_ids:
         katz.append(katz_model.score(node_map[str(author_id)]))
 
-    df = pd.DataFrame(
-        {"author": author_ids, "katz": katz}
-    )
+    df = pd.DataFrame({"author": author_ids, "katz": katz})
     return df
+
 
 def get_hindex_info(author_ids, train_data_json):
     "Return the min, the mean and the max of the known hindex of the author in author_ids"
@@ -193,6 +207,7 @@ def get_hindex_info(author_ids, train_data_json):
     else:
         return 1, 9.841160, 12
 
+
 def get_mean_neighbors_degree(author_ids):
     G, _, _ = get_graph()
     mean_degree = []
@@ -202,12 +217,12 @@ def get_mean_neighbors_degree(author_ids):
         for neighbor in neighbors:
             total += G.degree(neighbor)
         if len(list(neighbors)) != 0:
-            mean_degree.append(total/len(list(neighbors)))
-        else: mean_degree.append(0)
-    df = pd.DataFrame(
-        {"author": author_ids, "mean_neighbors_degree": mean_degree}
-    )
+            mean_degree.append(total / len(list(neighbors)))
+        else:
+            mean_degree.append(0)
+    df = pd.DataFrame({"author": author_ids, "mean_neighbors_degree": mean_degree})
     return df
+
 
 def get_neighborhood_info(author_ids, level=2):
     G, _, _ = get_graph()
